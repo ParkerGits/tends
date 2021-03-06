@@ -6,10 +6,17 @@ import {
     useState,
 } from "react";
 import { QuantityTendProps } from "./QuantityTend";
+import { TimerTendProps } from "./TimerTend";
+
+interface Tend {
+    title: string;
+}
 
 type TendsContextType = {
-    tendsList: QuantityTendProps[];
-    setTendsList: Dispatch<SetStateAction<QuantityTendProps[]>> | undefined;
+    tendsList: Array<QuantityTendProps | TimerTendProps>;
+    setTendsList:
+        | Dispatch<SetStateAction<Array<QuantityTendProps | TimerTendProps>>>
+        | undefined;
 };
 
 const TendsContext = createContext<TendsContextType>({
@@ -18,7 +25,9 @@ const TendsContext = createContext<TendsContextType>({
 });
 
 export function AppWrapper({ children }: { children: React.ReactNode }) {
-    const [tendsList, setTendsList] = useState<QuantityTendProps[]>([]);
+    const [tendsList, setTendsList] = useState<
+        Array<QuantityTendProps | TimerTendProps>
+    >([]);
 
     return (
         <TendsContext.Provider value={{ tendsList, setTendsList }}>

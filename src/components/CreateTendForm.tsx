@@ -1,27 +1,81 @@
 import { FormEvent, useState } from "react";
 import { useTendsContext } from "./TendsContext";
 import { useRouter } from "next/router";
+import { QuantityTendProps } from "./QuantityTend";
+import { TimerTendProps } from "./TimerTend";
+
+// IF EITHER START DATE OR START TIME, OTHER IS REQUIRED
+
+function parseDateTimeStrings(dateString: string, timeString: string): Date {
+    let inputDate = dateString;
+    const year: number = parseInt(
+        inputDate.substring(0, inputDate.indexOf("-"))
+    );
+    inputDate = inputDate.substring(inputDate.indexOf("-") + 1);
+    const month: number = parseInt(
+        inputDate.substring(0, inputDate.indexOf("-"))
+    );
+    const day: number = parseInt(
+        inputDate.substring(inputDate.indexOf("-") + 1)
+    );
+    const hour: number = parseInt(
+        timeString.substring(0, timeString.indexOf(":"))
+    );
+    const minute: number = parseInt(
+        timeString.substring(timeString.indexOf(":") + 1)
+    );
+    console.log(year, month, day, hour, minute);
+    return new Date(year, month, day, hour, minute);
+}
 
 export default function CreateTendForm() {
     const { tendsList, setTendsList } = useTendsContext();
 
     const [title, setTitle] = useState("");
     const [type, setType] = useState("");
-    const [units, setUnits] = useState<string | null>(null);
+
+    // Quantity Tend Props
+    const [units, setUnits] = useState<string>("");
     const [quantity, setQuantity] = useState(0);
     const [targetQuantity, setTargetQuantity] = useState(0);
     const router = useRouter();
 
+    // Timer Tend Props
+    const [startDate, setStartDate] = useState<string>();
+    const [startTime, setStartTime] = useState<string>();
+    const [targetDate, setTargetDate] = useState<string>();
+    const [targetTime, setTargetTime] = useState<string>();
+
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-        setTendsList!([
-            ...tendsList,
-            {
-                title: title,
-                units: units,
-                quantity: quantity,
-                targetQuantity: targetQuantity,
-            },
-        ]);
+        let newTend: QuantityTendProps | TimerTendProps;
+        switch (type) {
+            case "quantity":
+                console.log("Quantity Tend Created");
+                // set quantity to 0 if quantity is null
+                const initialQuantity: number = quantity ? quantity : 0;
+                const quantityTend: QuantityTendProps = {
+                    title: title,
+                    units: units,
+                    quantity: initialQuantity,
+                    targetQuantity: targetQuantity,
+                };
+                newTend = quantityTend;
+                break;
+            case "timer":
+                console.log("Timer Tend Created");
+                const beginTime: Date =
+                    startTime && startDate
+                        ? parseDateTimeStrings(startDate, startTime)
+                        : new Date(Date.now());
+                const timerTend: TimerTendProps = {
+                    title: title,
+                    targetTime: parseDateTimeStrings(targetDate!, targetTime!),
+                    startTime: beginTime,
+                };
+                newTend = timerTend;
+                break;
+        }
+        setTendsList!([...tendsList, newTend!]);
         event.preventDefault;
         router.push("/");
     };
@@ -61,41 +115,107 @@ export default function CreateTendForm() {
                 >
                     <option value="">-- Pick a Tend Type --</option>
                     <option value="quantity">Quantity</option>
-                    {/* <option value="timer">Timer</option> */}
+                    <option value="timer">Timer</option>
                 </select>
-                <input
-                    type="text"
-                    name="units"
-                    placeholder="Tend Units (i.e. calories, pages, etc.) "
-                    className="col-span-8 sm:col-span-4 mb-3"
-                    onChange={(e) => {
-                        setUnits(e.target.value);
-                    }}
-                />
-                <input
-                    type="number"
-                    placeholder="Initial Quantity"
-                    name="initialQuantity"
-                    className="col-span-4 sm:col-span-2 mb-3"
-                    onChange={(e) => {
-                        setQuantity(parseInt(e.target.value));
-                    }}
-                />
-
-                <input
-                    type="number"
-                    placeholder="Target Quantity"
-                    name="targetQuantity"
-                    className="col-span-4 sm:col-span-2 mb-3 "
-                    onChange={(e) => {
-                        setTargetQuantity(parseInt(e.target.value));
-                    }}
-                    required
-                />
-                <input
-                    type="submit"
-                    className="text-sm sm:text-base row-start-6 col-start-4 col-span-2 p-3 bg-soft-red hover:bg-soft-red-dark cursor-pointer font-semibold text-white rounded-full"
-                />
+                {type === "quantity" && (
+                    <div className="col-span-8 grid grid-cols-8 gap-x-4 sm:gap-x-8">
+                        <input
+                            type="text"
+                            name="units"
+                            placeholder="Tend Units (i.e. calories, pages, etc.) "
+                            className="col-span-8 sm:col-span-4 mb-3"
+                            onChange={(e) => {
+                                setUnits(e.target.value);
+                            }}
+                            value={units ? units : ""}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Initial Quantity"
+                            name="initialQuantity"
+                            className="col-span-4 sm:col-span-2 mb-3"
+                            onChange={(e) => {
+                                setQuantity(parseInt(e.target.value));
+                            }}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Target Quantity"
+                            name="targetQuantity"
+                            className="col-span-4 sm:col-span-2 mb-3 "
+                            onChange={(e) => {
+                                setTargetQuantity(parseInt(e.target.value));
+                            }}
+                            required
+                        />
+                        <input
+                            type="submit"
+                            className="text-sm sm:text-base row-end-auto col-start-3 col-span-4 sm:col-start-4 sm:col-span-2 p-3 bg-soft-red hover:bg-soft-red-dark cursor-pointer font-semibold text-white rounded-full"
+                        />
+                    </div>
+                )}
+                {type === "timer" && (
+                    <div className="col-span-8 grid grid-cols-8 gap-x-4 sm:gap-x-8">
+                        <label
+                            htmlFor="targetDate"
+                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
+                        >
+                            Target Date
+                            <input
+                                name="targetDate"
+                                type="date"
+                                onChange={(e) => {
+                                    setTargetDate(e.target.value);
+                                }}
+                                required
+                            />
+                        </label>
+                        <label
+                            htmlFor="targetTime"
+                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
+                        >
+                            Target Time
+                            <input
+                                name="targetTime"
+                                type="time"
+                                onChange={(e) => {
+                                    setTargetTime(e.target.value);
+                                }}
+                                required
+                            />
+                        </label>
+                        <label
+                            htmlFor="startDate"
+                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
+                        >
+                            Start Date
+                            <input
+                                name="startDate"
+                                type="date"
+                                onChange={(e) => {
+                                    setStartDate(e.target.value);
+                                }}
+                            />
+                        </label>
+                        <label
+                            htmlFor="startTime"
+                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
+                        >
+                            Start Time
+                            <input
+                                name="startTime"
+                                type="time"
+                                onChange={(e) => {
+                                    setStartTime(e.target.value);
+                                }}
+                            />
+                        </label>
+                        <input
+                            type="submit"
+                            className="text-sm sm:text-base row-end-auto col-start-3 col-span-4 sm:col-start-4 sm:col-span-2 p-3 bg-soft-red hover:bg-soft-red-dark cursor-pointer font-semibold text-white rounded-full"
+                        />
+                    </div>
+                )}
             </form>
         </div>
     );

@@ -34,6 +34,12 @@
     input[type="number"] {
         @apply border-b-2 border-gray-400 focus:border-gray-600;
     }
+    input[type="date"] {
+        @apply border border-gray-400 bg-gray-100 rounded-lg p-3;
+    }
+    input[type="time"] {
+        @apply border border-gray-400 bg-gray-100 rounded-lg p-3;
+    }
     select {
         @apply outline-none border border-gray-400 rounded-lg p-3;
     }

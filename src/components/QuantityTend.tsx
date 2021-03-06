@@ -8,7 +8,7 @@ export type QuantityTendProps = {
     title: string;
     quantity: number;
     targetQuantity: number;
-    units: string | null;
+    units: string;
     index?: number;
 };
 
@@ -30,7 +30,9 @@ export default function QuantityTend({
     };
     const addSubtractOnSubmitHandler = (e: FormEvent<HTMLFormElement>) => {
         let items = [...tendsList];
-        const item = { ...items[index!] };
+        const item: QuantityTendProps = {
+            ...items[index!],
+        } as QuantityTendProps;
         isAddingCurrent
             ? (item.quantity = item.quantity + changeAmount)
             : (item.quantity = item.quantity - changeAmount);

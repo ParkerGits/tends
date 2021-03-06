@@ -1,15 +1,13 @@
-type TimerTendProps = {
+export type TimerTendProps = {
     title: string;
-    defaultQuantity: number;
-    targetQuantity: number;
-    resetTime: Date;
+    startTime: Date;
+    targetTime: Date;
 };
 
 export default function TimerTend({
     title,
-    defaultQuantity,
-    targetQuantity,
-    resetTime,
+    startTime,
+    targetTime,
 }: TimerTendProps) {
     return <div></div>;
 }
