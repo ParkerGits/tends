@@ -6,6 +6,8 @@ import { useTendsContext } from "../components/TendsContext";
 import { QuantityTendProps } from "../components/QuantityTend";
 import { TimerTendProps } from "../components/TimerTend";
 
+// Add timer tend support here
+
 export default function Home() {
     const { tendsList, setTendsList } = useTendsContext();
     return (
