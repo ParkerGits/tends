@@ -15,6 +15,7 @@ export default function ProgressBar({
     };
     return (
         <div className="h-1/6 lg:h-1/5 bg-gray-300 ml-3 block rounded-r-full">
+            {console.log(currentQuantity, targetQuantity)}
             <div
                 className="bg-soft-red h-full rounded-r-full"
                 style={ProgressBarStyle}

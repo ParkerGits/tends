@@ -1,22 +1,10 @@
-import {
-    createContext,
-    Dispatch,
-    SetStateAction,
-    useContext,
-    useState,
-} from "react";
+import { createContext, useContext, useState } from "react";
 import { QuantityTendProps } from "./QuantityTend";
 import { TimerTendProps } from "./TimerTend";
 
-interface Tend {
-    title: string;
-}
-
 type TendsContextType = {
     tendsList: Array<QuantityTendProps | TimerTendProps>;
-    setTendsList:
-        | Dispatch<SetStateAction<Array<QuantityTendProps | TimerTendProps>>>
-        | undefined;
+    setTendsList: any;
 };
 
 const TendsContext = createContext<TendsContextType>({

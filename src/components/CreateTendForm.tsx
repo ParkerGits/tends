@@ -12,9 +12,8 @@ function parseDateTimeStrings(dateString: string, timeString: string): Date {
         inputDate.substring(0, inputDate.indexOf("-"))
     );
     inputDate = inputDate.substring(inputDate.indexOf("-") + 1);
-    const month: number = parseInt(
-        inputDate.substring(0, inputDate.indexOf("-"))
-    );
+    const month: number =
+        parseInt(inputDate.substring(0, inputDate.indexOf("-"))) - 1;
     const day: number = parseInt(
         inputDate.substring(inputDate.indexOf("-") + 1)
     );
@@ -43,8 +42,8 @@ export default function CreateTendForm() {
     // Timer Tend Props
     const [startDate, setStartDate] = useState<string>();
     const [startTime, setStartTime] = useState<string>();
-    const [targetDate, setTargetDate] = useState<string>();
-    const [targetTime, setTargetTime] = useState<string>();
+    const [targetHours, setTargetHours] = useState<string>();
+    const [targetMinutes, setTargetMinutes] = useState<string>();
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         let newTend: QuantityTendProps | TimerTendProps;
@@ -58,6 +57,7 @@ export default function CreateTendForm() {
                     units: units,
                     quantity: initialQuantity,
                     targetQuantity: targetQuantity,
+                    type: type,
                 };
                 newTend = quantityTend;
                 break;
@@ -67,15 +67,20 @@ export default function CreateTendForm() {
                     startTime && startDate
                         ? parseDateTimeStrings(startDate, startTime)
                         : new Date(Date.now());
+                const targetHoursInt = targetHours ? parseInt(targetHours) : 0;
+                const targetMinutesInt = targetMinutes
+                    ? parseInt(targetMinutes)
+                    : 0;
                 const timerTend: TimerTendProps = {
                     title: title,
-                    targetTime: parseDateTimeStrings(targetDate!, targetTime!),
+                    targetTime: targetHoursInt * 60 + targetMinutesInt,
                     startTime: beginTime,
+                    type: type,
                 };
                 newTend = timerTend;
                 break;
         }
-        setTendsList!([...tendsList, newTend!]);
+        setTendsList([...tendsList, newTend!]);
         event.preventDefault;
         router.push("/");
     };
@@ -157,29 +162,31 @@ export default function CreateTendForm() {
                 {type === "timer" && (
                     <div className="col-span-8 grid grid-cols-8 gap-x-4 sm:gap-x-8">
                         <label
-                            htmlFor="targetDate"
+                            htmlFor="targetHours"
                             className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
                         >
-                            Target Date
+                            Target Hours
                             <input
-                                name="targetDate"
-                                type="date"
+                                name="targetHours"
+                                type="number"
+                                className="p-2.5"
                                 onChange={(e) => {
-                                    setTargetDate(e.target.value);
+                                    setTargetHours(e.target.value);
                                 }}
                                 required
                             />
                         </label>
                         <label
-                            htmlFor="targetTime"
+                            htmlFor="targetMinutes"
                             className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
                         >
-                            Target Time
+                            Target Minutes
                             <input
-                                name="targetTime"
-                                type="time"
+                                name="targetMinutes"
+                                type="number"
+                                className="p-2.5"
                                 onChange={(e) => {
-                                    setTargetTime(e.target.value);
+                                    setTargetMinutes(e.target.value);
                                 }}
                                 required
                             />

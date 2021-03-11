@@ -4,7 +4,7 @@ import QuantityTend from "../components/QuantityTend";
 import CreateTendButton from "../components/CreateTendButton";
 import { useTendsContext } from "../components/TendsContext";
 import { QuantityTendProps } from "../components/QuantityTend";
-import { TimerTendProps } from "../components/TimerTend";
+import TimerTend, { TimerTendProps } from "../components/TimerTend";
 
 // Add timer tend support here
 
@@ -13,17 +13,14 @@ export default function Home() {
     return (
         <ContentContainer>
             {tendsList.map((tend, i) => {
-                console.log(typeof tend);
-                return (
-                    <QuantityTend
-                        title={tend.title}
-                        units={tend.units}
-                        quantity={tend.quantity}
-                        targetQuantity={tend.targetQuantity}
-                        index={i}
-                        key={i}
-                    />
-                );
+                switch (tend.type) {
+                    case "quantity":
+                        const quantityTend: QuantityTendProps = tend as QuantityTendProps;
+                        return <QuantityTend {...quantityTend} />;
+                    case "timer":
+                        const timerTend: TimerTendProps = tend as TimerTendProps;
+                        return <TimerTend {...timerTend} />;
+                }
             })}
             <CreateTendButton />
         </ContentContainer>

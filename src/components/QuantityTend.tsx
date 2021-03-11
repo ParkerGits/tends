@@ -10,6 +10,7 @@ export type QuantityTendProps = {
     targetQuantity: number;
     units: string;
     index?: number;
+    type?: string;
 };
 
 // currentQuantity
