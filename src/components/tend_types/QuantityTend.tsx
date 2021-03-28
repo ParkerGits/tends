@@ -1,14 +1,14 @@
 import { useState, ChangeEvent, FormEvent } from "react";
-import ProgressBar from "./ProgressBar";
-import AddSubtractButtons from "./AddSubtractButtons";
-import TendSideButtons from "./TendSideButtons";
-import { useTendsContext } from "./TendsContext";
+import ProgressBar from "../ProgressBar";
+import AddSubtractButtons from "../AddSubtractButtons";
+import TendSideButtons from "../TendSideButtons";
 
 export type QuantityTendProps = {
     title: string;
     quantity: number;
     targetQuantity: number;
     units: string;
+    id?: string;
     index?: number;
     type?: string;
 };
@@ -20,9 +20,8 @@ export default function QuantityTend({
     quantity,
     targetQuantity,
     units,
-    index,
+    id,
 }: QuantityTendProps) {
-    const { tendsList, setTendsList } = useTendsContext();
     const [changeAmount, setChangeAmount] = useState(0);
     const [isAddingCurrent, setIsAddingCurrent] = useState(false);
     const [isSubtractingCurrent, setIsSubtractingCurrent] = useState(false);
@@ -30,20 +29,22 @@ export default function QuantityTend({
         setChangeAmount(parseInt(e.target.value));
     };
     const addSubtractOnSubmitHandler = (e: FormEvent<HTMLFormElement>) => {
-        let items = [...tendsList];
-        const item: QuantityTendProps = {
-            ...items[index!],
-        } as QuantityTendProps;
-        isAddingCurrent
-            ? (item.quantity = item.quantity + changeAmount)
-            : (item.quantity = item.quantity - changeAmount);
-        items[index!] = item;
-        setTendsList!(items);
+        // FIX: Update with API
+        // let items = [...tendsList];
+        // const item: QuantityTendProps = {
+        //     ...items[index!],
+        // } as QuantityTendProps;
+        // isAddingCurrent
+        //     ? (item.quantity = item.quantity + changeAmount)
+        //     : (item.quantity = item.quantity - changeAmount);
+        // items[index!] = item;
+        // setTendsList!(items);
+
         isAddingCurrent
             ? setIsAddingCurrent(false)
             : setIsSubtractingCurrent(false);
         setChangeAmount(0);
-        e.preventDefault;
+        e.preventDefault();
     };
     const addOnClickHandler = () => {
         setIsAddingCurrent(true);
@@ -94,7 +95,7 @@ export default function QuantityTend({
                     </div>
                 </div>
             </div>
-            <TendSideButtons />
+            <TendSideButtons tendId={id!} />
         </div>
     );
 }

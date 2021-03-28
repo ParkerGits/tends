@@ -22,6 +22,10 @@ Once I was happy with the tend, I moved on to developing the "Create Tend" form.
 
 I then needed a way to pass the form data back to the index page from the form, so I decided to use the opportunity to learn about React Context. I created a `TendsContext` that provides all components in `App` with a list of the user's tends. I imagine that this implementation may have to change once authentication is implemented, but this is sufficient until then.
 
+The next step was to implement my Firebase backend. Following the React 2025 tutorial, I was able to do this easily. Furthermore, because I had learned about React context to share the list of tends throughout my application, I was familiar with how it is implemented in the React 2025 course.
+
+However, when it came time to set up the API, I realized that I did not need context to provide the list of user tends to all components because the API provides that. Thus, I removed all implementation of `TendsContext` in my code. To fetch information from the API, I'm using SWR.
+
 ## Inspiration ✨
 
 My inspiration for this project came from a recent interest in taking control of my life. I want to become both efficient and healthy, and I've come to realize that these qualities are *trained over time*. One doesn't suddenly become efficient or healthy. Instead, one must work those qualities into their lives through consistent practice. The goal for Tends is for it to be a simple tool that people (like me) can use to make sure that they are headed in the right direction. 

@@ -1,9 +1,11 @@
 import { FormEvent, useState } from "react";
-import { useTendsContext } from "./TendsContext";
 import { useRouter } from "next/router";
-import { QuantityTendProps } from "./QuantityTend";
-import { TimerTendProps } from "./TimerTend";
-
+import { QuantityTendProps } from "./tend_types/QuantityTend";
+import { TimerTendProps } from "./tend_types/TimerTend";
+import { createTend } from "../lib/db";
+import { useAuth } from "../lib/auth";
+import useSWR, { mutate } from "swr";
+import fetcher from "../utils/fetcher";
 // IF EITHER START DATE OR START TIME, OTHER IS REQUIRED
 
 function parseDateTimeStrings(dateString: string, timeString: string): Date {
@@ -28,8 +30,13 @@ function parseDateTimeStrings(dateString: string, timeString: string): Date {
 }
 
 export default function CreateTendForm() {
-    const { tendsList, setTendsList } = useTendsContext();
+    // Bring in user information
+    const auth = useAuth();
+    const authorId = auth.user.uid;
+    const userTendsAPI = `/api/tends/${authorId}`;
+    const { data } = useSWR(userTendsAPI, fetcher);
 
+    // General Tend Props
     const [title, setTitle] = useState("");
     const [type, setType] = useState("");
 
@@ -46,6 +53,7 @@ export default function CreateTendForm() {
     const [targetMinutes, setTargetMinutes] = useState<string>();
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
         let newTend: QuantityTendProps | TimerTendProps;
         switch (type) {
             case "quantity":
@@ -73,15 +81,32 @@ export default function CreateTendForm() {
                     : 0;
                 const timerTend: TimerTendProps = {
                     title: title,
-                    targetTime: targetHoursInt * 60 + targetMinutesInt,
+                    targetTime:
+                        targetHoursInt * 3600000 + targetMinutesInt * 60000,
                     startTime: beginTime,
                     type: type,
                 };
                 newTend = timerTend;
                 break;
         }
-        setTendsList([...tendsList, newTend!]);
-        event.preventDefault;
+
+        // Store tend to database with information provided, as well as user's ID and the the current time.
+        const newTendData = {
+            authorId: authorId,
+            createdAt: new Date().toISOString(),
+            ...newTend!,
+        };
+        createTend(newTendData);
+        // cache
+        const { tends } = data;
+
+        mutate(
+            userTendsAPI,
+            async (data: any = tends) => ({
+                tends: [...data.tends, newTendData],
+            }),
+            false
+        );
         router.push("/");
     };
 

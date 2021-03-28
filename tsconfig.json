@@ -23,8 +23,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/pages/trends/[tendId].js"  ],
   "exclude": [
     "node_modules"
-  ]
+  ],
 }
