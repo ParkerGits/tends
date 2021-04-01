@@ -2,7 +2,11 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import ProgressBar from "../ProgressBar";
 import AddSubtractButtons from "../AddSubtractButtons";
 import TendSideButtons from "../TendSideButtons";
-
+import { updateTendQuantity } from "../../lib/db";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRedoAlt } from "@fortawesome/free-solid-svg-icons";
+import { createTrend } from "../../lib/db";
+import { useAuth } from "../../lib/auth";
 export type QuantityTendProps = {
     title: string;
     quantity: number;
@@ -22,6 +26,8 @@ export default function QuantityTend({
     units,
     id,
 }: QuantityTendProps) {
+    const auth = useAuth();
+    const [currentQuantity, setCurrentQuantity] = useState(quantity);
     const [changeAmount, setChangeAmount] = useState(0);
     const [isAddingCurrent, setIsAddingCurrent] = useState(false);
     const [isSubtractingCurrent, setIsSubtractingCurrent] = useState(false);
@@ -29,20 +35,15 @@ export default function QuantityTend({
         setChangeAmount(parseInt(e.target.value));
     };
     const addSubtractOnSubmitHandler = (e: FormEvent<HTMLFormElement>) => {
-        // FIX: Update with API
-        // let items = [...tendsList];
-        // const item: QuantityTendProps = {
-        //     ...items[index!],
-        // } as QuantityTendProps;
-        // isAddingCurrent
-        //     ? (item.quantity = item.quantity + changeAmount)
-        //     : (item.quantity = item.quantity - changeAmount);
-        // items[index!] = item;
-        // setTendsList!(items);
-
         isAddingCurrent
             ? setIsAddingCurrent(false)
             : setIsSubtractingCurrent(false);
+
+        const newQuantity = isAddingCurrent
+            ? currentQuantity + changeAmount
+            : currentQuantity - changeAmount;
+        setCurrentQuantity(newQuantity);
+        updateTendQuantity(id, newQuantity);
         setChangeAmount(0);
         e.preventDefault();
     };
@@ -59,20 +60,45 @@ export default function QuantityTend({
                     <h2 className="text-gray-700 ml-4 my-2 font-semibold">
                         {title}
                     </h2>
-                    <AddSubtractButtons
-                        handleChange={addSubtractOnChangeHandler}
-                        handleAddClick={addOnClickHandler}
-                        handleSubtractClick={subtractOnClickHandler}
-                        handleSubmit={addSubtractOnSubmitHandler}
-                        currentQuantity={quantity}
-                        targetQuantity={targetQuantity}
-                        changeAmount={changeAmount}
-                        isAddingCurrent={isAddingCurrent}
-                        isSubtractingCurrent={isSubtractingCurrent}
-                    />
+                    <div className="flex flex-row">
+                        <AddSubtractButtons
+                            handleChange={addSubtractOnChangeHandler}
+                            handleAddClick={addOnClickHandler}
+                            handleSubtractClick={subtractOnClickHandler}
+                            handleSubmit={addSubtractOnSubmitHandler}
+                            currentQuantity={currentQuantity}
+                            targetQuantity={targetQuantity}
+                            changeAmount={changeAmount}
+                            isAddingCurrent={isAddingCurrent}
+                            isSubtractingCurrent={isSubtractingCurrent}
+                        />
+                        {/* Change to be automatic later! : */}
+                        {isAddingCurrent || isSubtractingCurrent ? null : (
+                            <FontAwesomeIcon
+                                className="mx-2 text-2xl text-soft-red cursor-pointer hover:text-soft-red-dark"
+                                icon={faRedoAlt}
+                                onClick={() => {
+                                    const newQuantityTrend = {
+                                        tendId: id,
+                                        currentValue: currentQuantity,
+                                        targetValue: targetQuantity,
+                                        tendTitle: title,
+                                        tendUnits: units,
+                                        tendType: "quantity",
+                                        createdAt: new Date().getTime(),
+                                        author: auth.user.name,
+                                        authorId: auth.user.uid,
+                                    };
+                                    createTrend(newQuantityTrend);
+                                    setCurrentQuantity(0);
+                                    updateTendQuantity(id, 0);
+                                }}
+                            />
+                        )}
+                    </div>
                 </div>
                 <ProgressBar
-                    currentQuantity={quantity}
+                    currentQuantity={currentQuantity}
                     targetQuantity={targetQuantity}
                 />
                 <div className="flex flex-row justify-evenly ml-3 mb-2">
@@ -81,7 +107,7 @@ export default function QuantityTend({
                             CURRENT
                         </h3>
                         <h4 className="text-center">
-                            {quantity} {units}
+                            {currentQuantity} {units}
                         </h4>
                     </div>
                     <div className="flex flex-col">

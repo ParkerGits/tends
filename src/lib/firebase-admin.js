@@ -10,4 +10,7 @@ if (!admin.apps.length) {
         databaseURL: "https://tends-631a2.firebaseio.com",
     });
 }
-export default admin.firestore();
+
+const auth = admin.auth()
+const db = admin.firestore();
+export {auth, db}

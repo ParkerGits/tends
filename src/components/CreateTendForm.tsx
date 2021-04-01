@@ -4,37 +4,21 @@ import { QuantityTendProps } from "./tend_types/QuantityTend";
 import { TimerTendProps } from "./tend_types/TimerTend";
 import { createTend } from "../lib/db";
 import { useAuth } from "../lib/auth";
-import useSWR, { mutate } from "swr";
-import fetcher from "../utils/fetcher";
+import { mutate } from "swr";
+import SignIn from "./SignIn";
+import { useTendsContext } from "./TendsContext";
 // IF EITHER START DATE OR START TIME, OTHER IS REQUIRED
 
-function parseDateTimeStrings(dateString: string, timeString: string): Date {
-    let inputDate = dateString;
-    const year: number = parseInt(
-        inputDate.substring(0, inputDate.indexOf("-"))
-    );
-    inputDate = inputDate.substring(inputDate.indexOf("-") + 1);
-    const month: number =
-        parseInt(inputDate.substring(0, inputDate.indexOf("-"))) - 1;
-    const day: number = parseInt(
-        inputDate.substring(inputDate.indexOf("-") + 1)
-    );
-    const hour: number = parseInt(
-        timeString.substring(0, timeString.indexOf(":"))
-    );
-    const minute: number = parseInt(
-        timeString.substring(timeString.indexOf(":") + 1)
-    );
-    console.log(year, month, day, hour, minute);
-    return new Date(year, month, day, hour, minute);
-}
-
 export default function CreateTendForm() {
+    const { tends, setTends } = useTendsContext();
     // Bring in user information
     const auth = useAuth();
+    if (!auth.user) {
+        return <SignIn />;
+    }
+
     const authorId = auth.user.uid;
-    const userTendsAPI = `/api/tends/${authorId}`;
-    const { data } = useSWR(userTendsAPI, fetcher);
+    const userTendsAPI = `/api/tends`;
 
     // General Tend Props
     const [title, setTitle] = useState("");
@@ -47,8 +31,6 @@ export default function CreateTendForm() {
     const router = useRouter();
 
     // Timer Tend Props
-    const [startDate, setStartDate] = useState<string>();
-    const [startTime, setStartTime] = useState<string>();
     const [targetHours, setTargetHours] = useState<string>();
     const [targetMinutes, setTargetMinutes] = useState<string>();
 
@@ -57,7 +39,6 @@ export default function CreateTendForm() {
         let newTend: QuantityTendProps | TimerTendProps;
         switch (type) {
             case "quantity":
-                console.log("Quantity Tend Created");
                 // set quantity to 0 if quantity is null
                 const initialQuantity: number = quantity ? quantity : 0;
                 const quantityTend: QuantityTendProps = {
@@ -70,11 +51,6 @@ export default function CreateTendForm() {
                 newTend = quantityTend;
                 break;
             case "timer":
-                console.log("Timer Tend Created");
-                const beginTime: Date =
-                    startTime && startDate
-                        ? parseDateTimeStrings(startDate, startTime)
-                        : new Date(Date.now());
                 const targetHoursInt = targetHours ? parseInt(targetHours) : 0;
                 const targetMinutesInt = targetMinutes
                     ? parseInt(targetMinutes)
@@ -83,8 +59,10 @@ export default function CreateTendForm() {
                     title: title,
                     targetTime:
                         targetHoursInt * 3600000 + targetMinutesInt * 60000,
-                    startTime: beginTime,
                     type: type,
+                    isRunning: false,
+                    beginTime: null,
+                    endTime: null,
                 };
                 newTend = timerTend;
                 break;
@@ -96,17 +74,18 @@ export default function CreateTendForm() {
             createdAt: new Date().toISOString(),
             ...newTend!,
         };
-        createTend(newTendData);
-        // cache
-        const { tends } = data;
+        const { id } = createTend(newTendData);
 
         mutate(
-            userTendsAPI,
-            async (data: any = tends) => ({
-                tends: [...data.tends, newTendData],
-            }),
+            [userTendsAPI, auth.user.token],
+            async (data: any) => {
+                return data
+                    ? { tends: [{ id, ...newTendData }, ...data.tends] }
+                    : { tends: [{ id, ...newTendData }, ...tends] };
+            },
             false
         );
+
         router.push("/");
     };
 
@@ -188,7 +167,7 @@ export default function CreateTendForm() {
                     <div className="col-span-8 grid grid-cols-8 gap-x-4 sm:gap-x-8">
                         <label
                             htmlFor="targetHours"
-                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
+                            className="col-span-4 mb-3 flex flex-col"
                         >
                             Target Hours
                             <input
@@ -203,7 +182,7 @@ export default function CreateTendForm() {
                         </label>
                         <label
                             htmlFor="targetMinutes"
-                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
+                            className="col-span-4 mb-3 flex flex-col"
                         >
                             Target Minutes
                             <input
@@ -214,32 +193,6 @@ export default function CreateTendForm() {
                                     setTargetMinutes(e.target.value);
                                 }}
                                 required
-                            />
-                        </label>
-                        <label
-                            htmlFor="startDate"
-                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
-                        >
-                            Start Date
-                            <input
-                                name="startDate"
-                                type="date"
-                                onChange={(e) => {
-                                    setStartDate(e.target.value);
-                                }}
-                            />
-                        </label>
-                        <label
-                            htmlFor="startTime"
-                            className="col-span-4 sm:col-span-2 mb-3 flex flex-col"
-                        >
-                            Start Time
-                            <input
-                                name="startTime"
-                                type="time"
-                                onChange={(e) => {
-                                    setStartTime(e.target.value);
-                                }}
                             />
                         </label>
                         <input

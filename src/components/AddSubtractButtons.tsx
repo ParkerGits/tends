@@ -35,11 +35,7 @@ export default function AddSubtractButtons({
                     <input
                         type="number"
                         min="0"
-                        max={`${
-                            isAddingCurrent
-                                ? targetQuantity - currentQuantity
-                                : currentQuantity
-                        }`}
+                        max={`${isAddingCurrent ? null : currentQuantity}`}
                         value={changeAmount}
                         className=""
                         onChange={(e) => handleChange(e)}

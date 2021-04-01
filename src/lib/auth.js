@@ -16,7 +16,8 @@ function useProvideAuth() {
     const handleUser = (rawUser) => {
         if (rawUser) {
             const user = formatUser(rawUser);
-            createUser(user.uid, user);
+            const {token, ...userWithoutToken} = user;
+            createUser(user.uid, userWithoutToken);
             setLoading(false);
             setUser(user);
             return user;
@@ -33,6 +34,13 @@ function useProvideAuth() {
             .signInWithPopup(new firebase.auth.GithubAuthProvider())
             .then((response) => handleUser(response.user));
     };
+    const signinWithGoogle = () => {
+        setLoading(true);
+        return firebase
+            .auth()
+            .signInWithPopup(new firebase.auth.GoogleAuthProvider())
+            .then((response) => handleUser(response.user));
+    };
     const signout = () => {
         return firebase
             .auth()
@@ -47,6 +55,7 @@ function useProvideAuth() {
         user,
         loading,
         signinWithGitHub,
+        signinWithGoogle,
         signout,
     };
 }
@@ -57,5 +66,6 @@ const formatUser = (user) => {
         name: user.displayName,
         provider: user.providerData[0].providerId,
         photoUrl: user.photoURL,
+        token: user.za
     };
 };

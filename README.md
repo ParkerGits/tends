@@ -12,7 +12,7 @@ The first step in this development process was to formulate my visions for this 
 
 I was still struggling to imagine how this website would operate, so I hopped onto Figma to visualize each component. This step was very helpful for me in the process of figuring out what pieces to prioritize.
 
-After getting an idea about the general layout and style of my project, I started a new project, installed and configured Next.js, Tailwind, and TypeScript, and began to develop the necessary components. It is worth noting that, because I am grow comfortable with TypeScript, I have configured it with the `strict` and `strictNullChecks` settings. 
+After getting an idea about the general layout and style of my project, I started a new project, installed and configured Next.js, Tailwind, and TypeScript, and began to develop the necessary components. It is worth noting that, because I aim to grow comfortable with TypeScript, I have configured it with the `strict` and `strictNullChecks` settings. 
 
 I started out by styling a basic container for all the tends, then I moved to styling the basic quantity tend. I only used CSS Grid and Flexbox for positioning, and I am thrilled with the results. In fact, I am convinced that there is little need for any forms of layout. Furthermore, I was able to quickly and easily implement Grid, Flexbox, and responsive design with Tailwind.
 

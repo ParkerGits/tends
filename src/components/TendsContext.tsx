@@ -1,24 +1,29 @@
 import { createContext, useContext, useState } from "react";
-import { QuantityTendProps } from "./QuantityTend";
-import { TimerTendProps } from "./TimerTend";
+import useSWR from "swr";
+import { useAuth } from "../lib/auth";
+import fetcher from "../utils/fetcher";
+import { QuantityTendProps } from "./tend_types/QuantityTend";
+import { TimerTendProps } from "./tend_types/TimerTend";
 
 type TendsContextType = {
-    tendsList: Array<QuantityTendProps | TimerTendProps>;
-    setTendsList: any;
+    tends: Array<QuantityTendProps | TimerTendProps>;
+    setTends: any;
 };
 
 const TendsContext = createContext<TendsContextType>({
-    tendsList: [],
-    setTendsList: undefined,
+    tends: [],
+    setTends: undefined,
 });
 
 export function AppWrapper({ children }: { children: React.ReactNode }) {
-    const [tendsList, setTendsList] = useState<
+    const user = useAuth();
+    const { data } = useSWR([`/api/tends`, user.token], fetcher);
+    const [tends, setTends] = useState<
         Array<QuantityTendProps | TimerTendProps>
-    >([]);
+    >(data ? data.tends : null);
 
     return (
-        <TendsContext.Provider value={{ tendsList, setTendsList }}>
+        <TendsContext.Provider value={{ tends, setTends }}>
             {children}
         </TendsContext.Provider>
     );

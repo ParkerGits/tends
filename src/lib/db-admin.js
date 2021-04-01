@@ -1,7 +1,8 @@
-import firebase from "./firebase-admin";
+import { compareDesc, parseISO } from "date-fns";
+import { db } from "./firebase-admin";
 
 export async function getTendTrends(tendId) {
-    const snapshot = await firebase
+    const snapshot = await db
         .collection("trends")
         .where("tendId", "==", tendId)
         .get();
@@ -13,21 +14,24 @@ export async function getTendTrends(tendId) {
     return trends;
 }
 
-export async function getUserTends(authorId) {
-    const snapshot = await firebase
+export async function getUserTends(userId) {
+    const snapshot = await db
         .collection("tends")
-        .where("authorId", "==", authorId)
+        .where("authorId", "==", userId)
         .get();
     const tends = [];
     snapshot.forEach((doc) => {
         tends.push({ id: doc.id, ...doc.data() });
     });
 
+    tends.sort((a, b) =>
+        compareDesc(parseISO(a.createdAt), parseISO(b.createdAt))
+    );
     return tends;
 }
 
-export async function getAllTends(authorId) {
-    const snapshot = await firebase.collection("tends").get();
+export async function getAllTends() {
+    const snapshot = await db.collection("tends").get();
     const tends = [];
     snapshot.forEach((doc) => {
         tends.push({ id: doc.id, ...doc.data() });

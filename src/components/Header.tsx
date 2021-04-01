@@ -1,4 +1,4 @@
-import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { useAuth } from "../lib/auth";
@@ -14,21 +14,13 @@ export default function Header() {
                 </h1>
             </Link>
             {auth.user ? (
-                <div>
-                    <p>Email: {auth.user.email}</p>
-                    <button onClick={(e) => auth.signout()}>Sign Out</button>
-                </div>
-            ) : (
-                <button onClick={(e) => auth.signinWithGitHub()}>
-                    Sign In
-                </button>
-            )}
-            <Link href="/create" passHref>
-                <FontAwesomeIcon
-                    icon={faBars}
-                    className="text-white hover:text-gray-200 text-3xl lg:text-4xl mr-7 self-center cursor-pointer"
-                />
-            </Link>
+                <Link href="/profile" passHref>
+                    <FontAwesomeIcon
+                        icon={faUserCircle}
+                        className="text-white hover:text-gray-200 text-3xl lg:text-4xl mr-7 self-center cursor-pointer"
+                    />
+                </Link>
+            ) : null}
         </div>
     );
 }
