@@ -168,7 +168,7 @@ export default firebase;
 
 ## Authentication
 
-Setting up authentication with Firebase was easier than I could have ever imagined it would be. The React Context Hook below provides every component in the application with both user data and methods to sign in and sign out.
+Setting up authentication with Firebase was easier than I could have ever imagined it would be. First, I enabled GitHub and Google as sign-in methods for my Firebase project. After some more configuration, the React Context Hook below is able to provide every component in the application with both user data and methods to sign-in and sign-out.
 
 ```js
 import React, { useState, useEffect, useContext, createContext } from "react";
@@ -187,43 +187,9 @@ function useProvideAuth() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const handleUser = (rawUser) => {
-        if (rawUser) {
-            const user = formatUser(rawUser);
-            const {token, ...userWithoutToken} = user;
-            createUser(user.uid, userWithoutToken);
-            setLoading(false);
-            setUser(user);
-            return user;
-        } else {
-            setLoading(false);
-            setUser(false);
-            return false;
-        }
-    };
-    const signinWithGitHub = () => {
-        setLoading(true);
-        return firebase
-            .auth()
-            .signInWithPopup(new firebase.auth.GithubAuthProvider())
-            .then((response) => handleUser(response.user));
-    };
-    const signinWithGoogle = () => {
-        setLoading(true);
-        return firebase
-            .auth()
-            .signInWithPopup(new firebase.auth.GoogleAuthProvider())
-            .then((response) => handleUser(response.user));
-    };
-    const signout = () => {
-        return firebase
-            .auth()
-            .signOut()
-            .then(() => handleUser(false));
-    };
-    useEffect(() => {
-        const unsubscribe = firebase.auth().onAuthStateChanged(handleUser);
-        return () => unsubscribe();
-    }, []);
+    
+    ...
+
     return {
         user,
         loading,
@@ -232,18 +198,183 @@ function useProvideAuth() {
         signout,
     };
 }
-const formatUser = (user) => {
-    return {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        provider: user.providerData[0].providerId,
-        photoUrl: user.photoURL,
-        token: user.za
-    };
+...
+```
+
+Now we can have the user sign in if they have not already done so.
+
+```js
+if (!auth.user) {
+    return (
+        <ContentContainer>
+            <SignIn />
+        </ContentContainer>
+    );
+}
+```
+
+Here's a functional skeleton of the `SignIn` component:
+
+```jsx
+export default function SignIn() {
+    const auth = useAuth();
+    ...
+    return (
+        <div>
+            <button
+                onClick={(e) => {
+                    auth.signinWithGitHub();
+                }}
+            >
+                Sign In with GitHub
+            </button>
+            <button
+                onClick={(e) => {
+                    auth.signinWithGoogle();
+                }}
+            >
+                Sign In with Google
+            </button>
+        </div>
+    );
+}
+```
+
+And here's an example of user data in Firebase:
+
+![User Data in Firebase](./img/quantity-trend-firebase.png)
+
+## Creating, Reading, Updating, and Deleting from Firestore
+
+In the above code, we `import { createUser } from "./db"`.
+
+`db.js` holds all the functions that the application uses to create, update, and delete data from Firestore.
+
+### A Snippet from db.js
+```js
+export function createUser(uid, data) {
+    return firestore
+        .collection("users")
+        .doc(uid)
+        .set({ uid, ...data }, { merge: true });
+}
+
+export function createTend(data) {
+    const tend = firestore.collection('tends').doc();
+    tend.set(data)
+    return tend;
+}
+
+export function updateTendQuantity(id, newQuantity) {
+    return firestore.collection("tends").doc(id).update({ quantity: newQuantity })
+}
+
+...
+```
+
+From `db.js`, I could import these functions into a component and then call them within the component.
+
+To read data from Firestore, I needed to host that data on API routes that my components could then fetch from. 
+
+### Get User Tends API Route
+```js
+import { getUserTends } from "../../lib/db-admin";
+import { auth } from "../../lib/firebase-admin";
+
+export default async (req, res) => {
+    try {
+        const token = req.headers.token;
+        const { uid } = await auth.verifyIdToken(token);
+        const tends = await getUserTends(uid);
+        res.status(200).json({ tends });
+    } catch (error) {
+        res.status(500).json({ error });
+    }
 };
 ```
 
-## Creating, Reading, Updating, and Deleting Tends
+Notice that the API route verifies the token in the request header. Without that check, anybody would have access to any user's data. API Route authentication is a topic covered in the React2025 course that, like most backend development, was completely foreign to me prior to this project.
 
+## Trends
 
+At this point in development, the user could successfully create a tend and have it display on their dashboard. Now I wanted to store data points associated with that tend. The app I use to track my intermittent fasting displays statistics and graphs for weight and time spent fasting: this is exactly what I envisioned for my application, except not exclusive to fasting nor weight.
+
+Firstly, I needed to determine *when* a data point should be stored. For the quantity tend, I have it set up for now to store a data point when the "reset" button is manually clicked. However, eventually, I would like to allow the user to decide how often they would like their quantity tend to be automatically reset and stored (think: weekly pages read, daily calories). For the timer tend, a data point is stored whenever the timer is stopped.
+
+### Example Quantity Trend Data Stored in Firebase
+![Quantity Trend Data Stored in Firebase](./img/quantity-trend-firebase.png)
+
+### Example Timer Trend Data Stored in Firebase
+![Timer Trend Data Stored in Firebase](./img/timer-trend-firebase.png)
+
+```jsx
+<ContentContainer>
+    <div className="border-b border-gray-300 p-5">
+        <h1 className="ml-3 font-semibold text-gray-700">
+            {initialTrends[0].tendTitle} Line Graph
+        </h1>
+    </div>
+
+    <hr className="text-gray-400" />
+    <h2 className="mx-auto text-gray-700 mt-3">
+        {initialTrends[0].tendUnits} over Time
+    </h2>
+    <ResponsiveContainer
+        width="80%"
+        height="30%"
+        className="mx-auto my-4"
+    >
+        <LineChart data={sortedTrends}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+                height={40}
+                dataKey="createdAt"
+                scale="time"
+                type="number"
+                domain={["auto", "auto"]}
+                tickFormatter={(unixTime) =>
+                    format(new Date(unixTime), "P")
+                }
+            >
+                <Label position="insideBottom" offset={0}>
+                    Date
+                </Label>
+            </XAxis>
+            <YAxis
+                dataKey="currentValue"
+                domain={[0, targetValue * 2]}
+                type="number"
+            >
+                <Label
+                    position="insideLeft"
+                    angle="-90"
+                    offset={10}
+                >
+                    {tendUnits}
+                </Label>
+            </YAxis>
+            <ReferenceLine
+                y={targetValue}
+                stroke="black"
+                strokeDasharray="3 3"
+            >
+                <Label
+                    position="top"
+                    offset={10}
+                >{`Target ${tendUnits}`}</Label>
+            </ReferenceLine>
+            <Line
+                dataKey="currentValue"
+                unit={tendUnits}
+                stroke="#CD3838"
+            />
+            <Tooltip
+                formatter={(value) => [`${value} `, `Recorded`]}
+                labelFormatter={(unixTime) =>
+                    format(new Date(unixTime), "PPpp")
+                }
+            />
+        </LineChart>
+    </ResponsiveContainer>
+</ContentContainer>
+```
