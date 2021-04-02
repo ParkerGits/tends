@@ -6,11 +6,10 @@ import { createTend } from "../lib/db";
 import { useAuth } from "../lib/auth";
 import { mutate } from "swr";
 import SignIn from "./SignIn";
-import { useTendsContext } from "./TendsContext";
+
 // IF EITHER START DATE OR START TIME, OTHER IS REQUIRED
 
 export default function CreateTendForm() {
-    const { tends, setTends } = useTendsContext();
     // Bring in user information
     const auth = useAuth();
     if (!auth.user) {
@@ -79,9 +78,7 @@ export default function CreateTendForm() {
         mutate(
             [userTendsAPI, auth.user.token],
             async (data: any) => {
-                return data
-                    ? { tends: [{ id, ...newTendData }, ...data.tends] }
-                    : { tends: [{ id, ...newTendData }, ...tends] };
+                return { tends: [{ id, ...newTendData }, ...data.tends] };
             },
             false
         );
@@ -165,36 +162,28 @@ export default function CreateTendForm() {
                 )}
                 {type === "timer" && (
                     <div className="col-span-8 grid grid-cols-8 gap-x-4 sm:gap-x-8">
-                        <label
-                            htmlFor="targetHours"
-                            className="col-span-4 mb-3 flex flex-col"
-                        >
-                            Target Hours
-                            <input
-                                name="targetHours"
-                                type="number"
-                                className="p-2.5"
-                                onChange={(e) => {
-                                    setTargetHours(e.target.value);
-                                }}
-                                required
-                            />
-                        </label>
-                        <label
-                            htmlFor="targetMinutes"
-                            className="col-span-4 mb-3 flex flex-col"
-                        >
-                            Target Minutes
-                            <input
-                                name="targetMinutes"
-                                type="number"
-                                className="p-2.5"
-                                onChange={(e) => {
-                                    setTargetMinutes(e.target.value);
-                                }}
-                                required
-                            />
-                        </label>
+                        <input
+                            name="targetHours"
+                            type="number"
+                            placeholder="Target Hours"
+                            className="p-2.5 col-span-4 mb-3"
+                            onChange={(e) => {
+                                setTargetHours(e.target.value);
+                            }}
+                            required
+                        />
+
+                        <input
+                            name="targetMinutes"
+                            type="number"
+                            placeholder="Target Minutes"
+                            className="p-2.5 col-span-4 mb-3"
+                            onChange={(e) => {
+                                setTargetMinutes(e.target.value);
+                            }}
+                            required
+                        />
+
                         <input
                             type="submit"
                             className="text-sm sm:text-base row-end-auto col-start-3 col-span-4 sm:col-start-4 sm:col-span-2 p-3 bg-soft-red hover:bg-soft-red-dark cursor-pointer font-semibold text-white rounded-full"
