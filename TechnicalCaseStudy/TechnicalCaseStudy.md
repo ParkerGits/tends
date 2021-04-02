@@ -297,7 +297,7 @@ Notice that the API route verifies the token in the request header. Without that
 
 ## Trends
 
-At this point in development, the user could successfully create a tend and have it display on their dashboard. Now I wanted to store data points associated with that tend. The app I use to track my intermittent fasting displays statistics and graphs for weight and time spent fasting: this is exactly what I envisioned for my application, except not exclusive to fasting nor weight.
+At this point in development, the user could successfully create a tend and have it display on their dashboard. Now I wanted to store data points associated with that tend. The app I use to track my intermittent fasting displays statistics and graphs for weight and time spent fasting: this is exactly what I envisioned for my application, except not exclusive to tracking fasting nor weight.
 
 Firstly, I needed to determine *when* a data point should be stored. For the quantity tend, I have it set up for now to store a data point when the "reset" button is manually clicked. However, eventually, I would like to allow the user to decide how often they would like their quantity tend to be automatically reset and stored (think: weekly pages read, daily calories). For the timer tend, a data point is stored whenever the timer is stopped.
 
@@ -307,36 +307,23 @@ Firstly, I needed to determine *when* a data point should be stored. For the qua
 ### Example Timer Trend Data Stored in Firebase
 ![Timer Trend Data Stored in Firebase](./img/timer-trend-firebase.png)
 
+## Data Visualization
+
+The goal with the trends feature is to meaningfully display the user's habits over time. To accomplish this, I use Next.js dynamic routes to create a path for each tend, then use [Recharts](https://recharts.org/en-US) visualize the trend data associated with that tend.
+
+### Skeleton of Recharts Line Graph for Trend Data
+
 ```jsx
 <ContentContainer>
-    <div className="border-b border-gray-300 p-5">
-        <h1 className="ml-3 font-semibold text-gray-700">
-            {initialTrends[0].tendTitle} Line Graph
-        </h1>
-    </div>
-
-    <hr className="text-gray-400" />
-    <h2 className="mx-auto text-gray-700 mt-3">
-        {initialTrends[0].tendUnits} over Time
-    </h2>
-    <ResponsiveContainer
-        width="80%"
-        height="30%"
-        className="mx-auto my-4"
-    >
+    <ResponsiveContainer>
         <LineChart data={sortedTrends}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid  />
             <XAxis
-                height={40}
                 dataKey="createdAt"
                 scale="time"
                 type="number"
-                domain={["auto", "auto"]}
-                tickFormatter={(unixTime) =>
-                    format(new Date(unixTime), "P")
-                }
             >
-                <Label position="insideBottom" offset={0}>
+                <Label>
                     Date
                 </Label>
             </XAxis>
@@ -355,18 +342,13 @@ Firstly, I needed to determine *when* a data point should be stored. For the qua
             </YAxis>
             <ReferenceLine
                 y={targetValue}
-                stroke="black"
-                strokeDasharray="3 3"
             >
                 <Label
-                    position="top"
-                    offset={10}
                 >{`Target ${tendUnits}`}</Label>
             </ReferenceLine>
             <Line
                 dataKey="currentValue"
                 unit={tendUnits}
-                stroke="#CD3838"
             />
             <Tooltip
                 formatter={(value) => [`${value} `, `Recorded`]}
@@ -378,3 +360,17 @@ Firstly, I needed to determine *when* a data point should be stored. For the qua
     </ResponsiveContainer>
 </ContentContainer>
 ```
+
+The `LineChart` component takes in an array of trends sorted by date created and creates a meaningful visualization that the user can observe to determine whether he or she is building or breaking a habit.
+
+![Parker Points Trend Graph](img/parker-points-trend.png)
+
+## Stripe Integration
+
+As was true with implementing authentication and database, adding Stripe to this project was much less painful than I had anticipated. Again, I followed along with the React2025 course: first, the Stripe extension for Firebase was installed on project, then Stripe was configured in the code so that the user could create Stripe Checkout Sessions and access their Billing Portal. 
+
+At this point in time, the functionality of Stripe in this application is limited. So far, the content created for the application is what I expected to be accessible by free-tier, unsubscribed users. There is plenty of room for more dashboard customizability, more tend types, more trend data visualization, and new features to be implemented, all of which would justify a premium plan being included into the project. For now, though, the current state of the project does not justify the existence of a premium subscription tier of user.
+
+## Moving Forward
+
+At the moment of writing, the application is *usable*. However, as previously mentioned, there are many opportunities for this project to grow. There currently are some bugs to squash and some aspects of user experience that need improvement. Furthermore, admittedly, as deadlines approached, I felt myself grow lazier with TypeScript, and eventually I just reverted to plain JavaScript to more easily follow along with the tutorials I was viewing. Nevertheless, I'm satisfied with the foundation that I have set for the future of this project to stand atop, and I truly believe that this idea has potential as a SaaS application. Overall, I'm both surprised and delighted at how little trouble I ran into while taking on things that I had anticipated to be difficult. This project has given me the gratification to both continue developing it and to continue my journey as a self-taught developer.
