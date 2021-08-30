@@ -30,7 +30,7 @@ export async function goToBillingPortal() {
       returnUrl: `${window.location.origin}/profile`,
     })
     window.location.assign(data.url)
-  }
+}
 
 export function createUser(uid, data) {
     return firestore

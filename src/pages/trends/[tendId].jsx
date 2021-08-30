@@ -1,5 +1,5 @@
 import ContentContainer from "../../components/ContentContainer";
-import { getTendTrends, getAllTends } from "../../lib/db-admin";
+import LoadingSpinner from '../../components/LoadingSpinner'
 import {
     LineChart,
     CartesianGrid,
@@ -10,34 +10,24 @@ import {
     ResponsiveContainer,
     Tooltip,
     Label,
-    BarChart,
-    Bar,
-} from "recharts";
+} from "recharts"
+import useSWR from "swr";
+import fetcher from "../../utils/fetcher";
+import { useRouter } from 'next/router'
 import { format } from "date-fns";
-export async function getStaticProps(context) {
-    const tendId = context.params.tendId;
-    const trends = await getTendTrends(tendId);
 
-    return {
-        props: { initialTrends: trends },
-        revalidate: 1
-    };
-}
-
-export async function getStaticPaths() {
-    const tends = await getAllTends();
-    const paths = tends.map((tend) => ({
-        params: {
-            tendId: tend.id.toString(),
-        },
-    }));
-    return {
-        paths,
-        fallback: false,
-    };
-}
-
-const Trend = ({ initialTrends }) => {
+const Trend = () => {
+    const router = useRouter()
+    const {tendId} = router.query
+    const { data } = useSWR(`/api/trends/${tendId}`, fetcher) 
+    if (!data) {
+        return (
+            <ContentContainer>
+                <LoadingSpinner />
+            </ContentContainer>
+        );
+    }
+    const initialTrends = data.trends
     if (initialTrends.length < 2) {
         return (
             <ContentContainer>
